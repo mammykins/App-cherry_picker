@@ -133,9 +133,9 @@ server <- function(input, output, session) {
   
   output$mymap <- renderLeaflet({
     pal11 <- colorNumeric(palette = "PuRd",
-                          ks4_sp_ll()@data$surplus_land)
+                          ks4_sp_ll()@data$apples)
     pal12 <- colorNumeric(palette = "PuBuGn",
-                          ks4_sp_ll()@data$surplus_proportion) 
+                          ks4_sp_ll()@data$pears) 
     # pal13 <- colorNumeric(palette = "YlOrRd",
     #                       ks4_sp_ll()@data$total_area)
     
@@ -143,73 +143,74 @@ server <- function(input, output, session) {
       addProviderTiles(provider = "Esri.WorldImagery", group = "Terrain") %>%
       addProviderTiles(provider = "OpenStreetMap.BlackAndWhite", group = "OSM (B & W)") %>%
       # addProviderTiles("Stamen.TonerLite", group = "Toner Lite") %>%
-      # Surplus Land
+      # Apples
       addCircles(lng = ks4_sp_ll()@coords[, "longitude"],
                  lat = ks4_sp_ll()@coords[, "latitude"],
                  color = "black",
                  opacity = 0.8,
                  weight = 0.5,
-                 radius = sqrt(ks4_sp_ll()@data$surplus_land/pi),
+                 radius = 100,  #  Radius can be used for spatial stuff
                  fillOpacity = 0.5,
-                 fillColor = pal11(ks4_sp_ll()@data$surplus_land),
-                 popup = NULL, group = "Surplus Land") %>%
+                 fillColor = pal11(ks4_sp_ll()@data$apples),
+                 popup = NULL, group = "Apples") %>%
       addLegend("bottomright", pal = pal11,
-                values = ks4_sp_ll()@data$surplus_land,
-                title = "Surplus Land",
+                values = ks4_sp_ll()@data$apples,
+                title = "Apples",
                 labFormat = labelFormat(prefix = ""),
-                opacity = 0.5, layerId = "Surplus Land") %>%
-      # surplus_proportion
+                opacity = 0.5, layerId = "Apples") %>%
+      # Pears
       addCircles(lng = ks4_sp_ll()@coords[, "longitude"],
                  lat = ks4_sp_ll()@coords[, "latitude"],
                  color = "black",
-                 opacity = 1, radius = 80, weight = 1,
+                 opacity = 1, radius = 100, weight = 1,
                  fillOpacity = 0.3,
-                 fillColor = pal12(ks4_sp_ll()@data$surplus_proportion),
-                 popup = NULL, group = "Surplus Proportion") %>%
+                 fillColor = pal12(ks4_sp_ll()@data$pears),
+                 popup = NULL, group = "Pears") %>%
       addLegend("bottomleft", pal = pal12,
-                values = ks4_sp_ll()@data$surplus_proportion,
-                title = "Surplus Proportion",
+                values = ks4_sp_ll()@data$pears,
+                title = "Pears",
                 labFormat = labelFormat(prefix = ""),
-                opacity = 0.5, layerId = "Surplus Proportion") %>%
-      # Surplus proportion outline
+                opacity = 0.5, layerId = "Pears") %>%
+      # Pear outline
       addCircles(lng = ks4_sp_ll()@coords[, "longitude"],
                  lat = ks4_sp_ll()@coords[, "latitude"],
-                 color = pal12(ks4_sp_ll()@data$surplus_proportion),
+                 color = pal12(ks4_sp_ll()@data$pears),
                  opacity = 1,
-                 radius = sqrt(ks4_sp_ll()@data$surplus_land/pi),
+                 radius = 100,
                  weight = 3,
                  fillOpacity = 0,
-                 fillColor = pal12(ks4_sp_ll()@data$surplus_proportion),
-                 popup = NULL, group = "Relative free land") %>%
-      # backlog marker
+                 fillColor = pal12(ks4_sp_ll()@data$pears),
+                 popup = NULL, group = "Pear outline") %>%
+      # marker
       addMarkers(lng = ks4_sp_ll()@coords[, "longitude"],
                  lat = ks4_sp_ll()@coords[, "latitude"],
                  popup = as.character(paste(ks4_sp_ll()@data$school_name, 
-                                            "has a total site area of",
-                                            round(ks4_sp_ll()@data$total_site_area),
-                                            "m^2",
+                                            "has a total fruit consumption of",
+                                            round(ks4_sp_ll()@data$apples + ks4_sp_ll()@data$pears),
+                                            "pieces of fruit per student per day.",
                                             sep = "\n"
                  )),
                  options = popupOptions(closeButton = TRUE),
-                 group = "Total Site Area") %>%
+                 group = "Fruit Markers") %>%
       ### LA
       addPolygons(data = polygon_la(), 
                   stroke = TRUE, fillOpacity = 0, smoothFactor = 0.2, 
                   color = "black", weight = 3,
                   group = "LA boundary") %>%
       ### Groups
-      hideGroup("Surplus Proportion") %>%
-      hideGroup("Total Site Area") %>%
-      hideGroup("Relative free land") %>%
-      showGroup("Surplus Land") %>%
+      hideGroup("Fruit Markers") %>%
+      hideGroup("Pears") %>%
+      hideGroup("Pear outline") %>%
+      showGroup("Apples") %>%
       hideGroup("Terrain") %>%
       showGroup("OSM (B & W)") %>%
       showGroup("LA boundary") %>%
       # Layers control
       addLayersControl(
         baseGroups = c("Terrain", "OSM (B & W)"),
-        overlayGroups = c("Surplus Land", "Surplus Proportion",
-                          "Total Site Area", "Relative free land"
+        overlayGroups = c("Apples", "Pear outline",
+                          "Pears",
+                          "Fruit Markers"
                           ),
         options = layersControlOptions(collapsed = FALSE)
       )
