@@ -33,6 +33,8 @@ server <- function(input, output, session) {
   
 # APPLE DATA FOR SCHOOLS IN LA --------------------------------------
 # Join data and filter for LA and school phase by user input
+# This is called KS4 to map for my convenience, don't read into it (Primary can be mapped also)
+  
   ks4_to_map <- reactive({
     dplyr::filter(fruits,
                   la_number == as.numeric(sapply(strsplit(input$la_of_interest[[1]], split = " "), "[[", 1))) %>%
@@ -44,12 +46,11 @@ server <- function(input, output, session) {
       na.omit()
   })
 
-  output$surplus_table_data <- DT::renderDataTable({
-    expr = datatable(ks4_to_map() %>%
-      select(school_name, total_site_area, total_ground_floor, surplus_land,
-             surplus_proportion, urn) %>%
-      mutate(surplus_proportion = round(surplus_proportion, 2)) %>%
-      arrange(desc(surplus_land)) %>%
+  output$fruit_table_data <- DT::renderDataTable({
+    expr = datatable(ks4_to_map() %>%  #  Notice the parentheses! ()
+      select(school_name, apples, pears,
+             urn) %>%
+      mutate(cherry_status = round(apples * pears, 2)) %>%
       rename(School_Name = school_name, URN = urn),
       selection =  list(mode = 'multiple', selected = 1, target = 'row')  #  preselection, ?datatable
     )
@@ -57,76 +58,50 @@ server <- function(input, output, session) {
   })
   
   output$download_data <- downloadHandler(
-    filename = function() { paste("surplus_scout_app_", input$la_of_interest, '.csv', sep = '') },
+    filename = function() { paste("cherry_picker_app_", input$la_of_interest, '.csv', sep = '') },
     content = function(file) {
       write.csv(ks4_to_map(), file)
     }
   )
   
-  
-  
   # NATIONAL DISTRIBUTIONS for LA comparison --------------------------------
-  scap_to_plot <- reactive({
-    dplyr::filter(la_scap_data,
-                  la_number == as.numeric(sapply(strsplit(input$la_of_interest[[1]], split = " "), "[[", 1)) &
-                  school_phase == tolower(input$phase)
-                  )
-  })
+  
   # Provide variable distributions to aid comparison to rest of the country
-  # Each La has two data, primary and secondary, need to compare relative to phase
-  output$hist_no_pupils_in_excess <- renderPlot({
-    hist(filter(la_scap_data,
-                school_phase == tolower(input$phase)
-                )$no_pupils_in_excess,
-         main = "Pupil places shortage",
-         xlab = "Number of places",
-         breaks = 20,
-         col = "salmon", border = 'white')
-    rug(scap_to_plot()$no_pupils_in_excess, ticksize = -0.2, lwd = 3, col = "blue")
+  output$hist_progress_8 <- renderPlot({
+    hist(ks4_data$progress_8, main = "Attainment",
+         xlab = "Progress 8", col = "salmon", border = 'white',
+         breaks = 20, xlim = c(-2, 2))
+    rug(ks4_to_map()$progress_8, ticksize = -0.2, lwd = 3, col = "blue")
   })
   
-  output$pupil_excess_as_percentage_of_places <- renderPlot({
-    hist(filter(la_scap_data,
-                school_phase == tolower(input$phase)
-    )$pupil_excess_as_percentage_of_places,
-    main = "Relative pupil places shortage",
-    xlab = "%",
-    breaks = 20,
-    col = '#00DD00', border = 'white')
-    rug(scap_to_plot()$pupil_excess_as_percentage_of_places, ticksize = -0.15, lwd = 3, col = "blue")
+  output$hist_backlog <- renderPlot({
+    hist((left_join(condition_backlog_data, school_locations, by = "urn") %>% 
+            filter(phase == "Secondary"))$cost_backlog,  #  just for Secondary Schools, remove Primary
+         main = "Condition",
+         xlab = "Backlog (£)", col = '#00DD00', border = 'white',
+         breaks = 20)
+    rug(ks4_to_map()$cost_backlog, ticksize = -0.15, lwd = 3, col = "blue")
   })
-
+  
 # FORMS OF ENTRY ----------------------------------------------------------
 # Recommended area per pupil set in global.R
 # https://rstudio.github.io/DT/shiny.html
   # row selection
-  output$form_of_entry <- DT::renderDataTable(datatable(
+  output$green_grocers <- DT::renderDataTable(datatable(
     slice(ks4_to_map() %>%
             select(school_name, total_site_area, total_ground_floor, surplus_land,
                    surplus_proportion, urn) %>%
             mutate(surplus_proportion = round(surplus_proportion, 2)) %>%
             arrange(desc(surplus_land)) %>%
-            rename(School_Name = school_name, URN = urn),  #  creates identical table to slice from, see surplus_table_data
-          input$surplus_table_data_rows_selected) %>%  # add FE, could write a function here to tidy
-      mutate(one_FE = surplus_land / (if_else(input$phase == "Secondary",
-                                              secondary_min_per_pupil,
-                                              primary_min_per_pupil) * 30),
-             two_FE = surplus_land / (if_else(input$phase == "Secondary",
-                                              secondary_min_per_pupil,
-                                              primary_min_per_pupil) * 60),
-             three_FE = surplus_land / (if_else(input$phase == "Secondary",
-                                              secondary_min_per_pupil,
-                                              primary_min_per_pupil) * 90),
-             four_FE = surplus_land / (if_else(input$phase == "Secondary",
-                                              secondary_min_per_pupil,
-                                              primary_min_per_pupil) * 120),
-             five_FE = surplus_land / (if_else(input$phase == "Secondary",
-                                              secondary_min_per_pupil,
-                                              primary_min_per_pupil) * 150)
+            rename(School_Name = school_name, URN = urn),  #  creates identical table to slice from, see fruit_table_data
+          input$fruit_table_data_rows_selected) %>%  
+      mutate(green_grocers_required = (apples + pears) / (if_else(input$phase == "Secondary",
+                                              50,  #  Secondary school children need more fruit!?
+                                              10) * 30)
     ) %>%  #  we refine the datatable here and prettify
-      select(School_Name, one_FE, two_FE, three_FE, four_FE, five_FE)
+      select(School_Name, green_grocers_required)
   ) %>%  #  and prettify
-    formatRound(c("School_Name", "one_FE", "two_FE", "three_FE", "four_FE", "five_FE"),
+    formatRound(c("School_Name", "Green grocers required"),
                 0)
   )
   
