@@ -47,13 +47,29 @@ server <- function(input, output, session) {
   })
 
   output$fruit_table_data <- DT::renderDataTable({
-    expr = datatable(ks4_to_map() %>%  #  Notice the parentheses! ()
+    expr = datatable(
+      ks4_to_map() %>%  #  Notice the parentheses! ()
       select(school_name, apples, pears,
              urn) %>%
-      mutate(cherry_status = round(apples * pears, 2)) %>%
+      mutate(apples = round(apples, 2), pears = round(pears, 2), cherry_status = round(apples * pears, 2)) %>%
       rename(School_Name = school_name, URN = urn),
       selection =  list(mode = 'multiple', selected = 1, target = 'row')  #  preselection, ?datatable
-    )
+    ) %>%
+      #  http://rstudio.github.io/DT/functions.html
+      formatStyle(
+        c("apples", "pears", "cherry_status"),
+        color = styleInterval(0.5, c('red', 'blue'))  #  colour table font based on rule
+      ) %>%
+      formatCurrency(c('apples', 'pears'),  #  add currency symbols and round
+                     '\U00A3',
+                     digits = 2)  #%>%
+      #  # formatStyle(
+      #  #   'cherry_status',
+      #  #   background = styleColorBar(ks4_to_map()$cherry_status, 'steelblue'),
+      # #   backgroundSize = '100% 90%',
+      # #   backgroundRepeat = 'no-repeat',
+      # #   backgroundPosition = 'center'
+      #  )
     
   })
   
@@ -67,41 +83,54 @@ server <- function(input, output, session) {
   # NATIONAL DISTRIBUTIONS for LA comparison --------------------------------
   
   # Provide variable distributions to aid comparison to rest of the country
-  output$hist_progress_8 <- renderPlot({
-    hist(ks4_data$progress_8, main = "Attainment",
-         xlab = "Progress 8", col = "salmon", border = 'white',
-         breaks = 20, xlim = c(-2, 2))
-    rug(ks4_to_map()$progress_8, ticksize = -0.2, lwd = 3, col = "blue")
+  output$hist_apples <- renderPlot({
+    hist(fruits$apples,  #  Note this does all schools, doesn't filter for School Phase, which you may want
+         main = "Apple of my eye",  #  Note how we call our pre-filtered data assigned in global!
+         xlab = "Apples", col = "salmon", border = 'white', xlim = c(0, 1))
+    rug(ks4_to_map()$apples, ticksize = -0.2, lwd = 3, col = "blue")  #  For the rug we use our reactive dataframes
   })
   
-  output$hist_backlog <- renderPlot({
-    hist((left_join(condition_backlog_data, school_locations, by = "urn") %>% 
-            filter(phase == "Secondary"))$cost_backlog,  #  just for Secondary Schools, remove Primary
-         main = "Condition",
-         xlab = "Backlog (£)", col = '#00DD00', border = 'white',
-         breaks = 20)
-    rug(ks4_to_map()$cost_backlog, ticksize = -0.15, lwd = 3, col = "blue")
+  output$hist_pears <- renderPlot({
+    plot(density(fruits$pears), 
+         main = "Pear shaped",
+         xlab = "Pears", col = '#00DD00', xlim = c(0, 1))
+    rug(ks4_to_map()$pears, ticksize = -0.15, lwd = 3, col = "blue")
   })
   
-# FORMS OF ENTRY ----------------------------------------------------------
-# Recommended area per pupil set in global.R
+  output$scatter_fruit <- renderPlot({
+    ggplot(fruits, aes(x = apples, y = pears, col = "red")) +
+      geom_bin2d() +
+      xlim(0, 1) + ylim(0, 1) +
+      geom_point(data = slice(ks4_to_map(),
+                              input$fruit_table_data_rows_selected), #  Add our selected schools from the previous tab's table
+                 mapping = aes(x = apples, y = pears,
+                               shape = "circle", colour = "blue",
+                               size = 4.5)) +
+      annotate( "rect", xmin = 0.8 , xmax = 1.0, ymin = 0.8, ymax = 1.0,
+                alpha = 0.01, colour = "pink") +  #  Capture data points that are ripe for picking!
+      annotate("text", x = 0.9, y = 0.9,
+               label = "Cherry picking region", col = "white") +
+      ggthemes::theme_tufte()
+
+  })
+  
+# ANOTHER TAB ----------------------------------------------------------
+  # Here we can use another tab to display some furter analysis or statistics
 # https://rstudio.github.io/DT/shiny.html
   # row selection
   output$green_grocers <- DT::renderDataTable(datatable(
     slice(ks4_to_map() %>%
-            select(school_name, total_site_area, total_ground_floor, surplus_land,
-                   surplus_proportion, urn) %>%
-            mutate(surplus_proportion = round(surplus_proportion, 2)) %>%
-            arrange(desc(surplus_land)) %>%
-            rename(School_Name = school_name, URN = urn),  #  creates identical table to slice from, see fruit_table_data
+            select(school_name, apples, pears, urn) %>%
+            arrange(desc(apples)) %>%
+            rename(School_Name = school_name, URN = urn), #  creates identical table to slice from, see fruit_table_data
           input$fruit_table_data_rows_selected) %>%  
-      mutate(green_grocers_required = (apples + pears) / (if_else(input$phase == "Secondary",
-                                              50,  #  Secondary school children need more fruit!?
-                                              10) * 30)
+      mutate(made_up_statistic = (apples + pears) * (if_else(input$phase == "Secondary",
+                                              3,  #  Secondary school children need more fruit!?
+                                              1) * 30)
     ) %>%  #  we refine the datatable here and prettify
-      select(School_Name, green_grocers_required)
+      select(School_Name, made_up_statistic)
   ) %>%  #  and prettify
-    formatRound(c("School_Name", "Green grocers required"),
+    formatRound(c("School_Name", "made_up_statistic"),
                 0)
   )
   
@@ -149,7 +178,7 @@ server <- function(input, output, session) {
                  color = "black",
                  opacity = 0.8,
                  weight = 0.5,
-                 radius = 100,  #  Radius can be used for spatial stuff
+                 radius = 100,  #  Radius could be assigned to a another variable
                  fillOpacity = 0.5,
                  fillColor = pal11(ks4_sp_ll()@data$apples),
                  popup = NULL, group = "Apples") %>%

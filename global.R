@@ -34,6 +34,10 @@ la_s_ll <- spTransform(la_s, CRS("+init=epsg:4326"))
 expect_equal(length(la_s_ll@data$LEA_NAME), 152,
              info = "there are 152 LA, do we have data for all?")
 
+#  We can add some tests into our code using the testthat package
+#  This provides quality assurance for our inputs and outputs
+#  http://www.machinegurning.com/rstats/test-driven-development/
+
 # SCHOOL COORD, SCAP and Surplus land data ----------------------------------
 school_locations <- read_rds("data/school_locations.rds")
 apples <- read_rds("data/apples_data.rds")
