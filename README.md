@@ -4,8 +4,8 @@ A Shiny app for mapping School specific variables by Local Education Authority w
 
 ## The live app
 
-[App-cherry_picker](https://mammykins.shinyapps.io/App-cherry_picker/) allows the user to investigate correlations between two made-up variables drawn from a uniform distribution. 
-It demonstrates how [cherry picking](https://en.wikipedia.org/wiki/Cherry_picking), or finding data that supports your viewpoint (and ignoring data that does not) can be easily done even with two totally uncorrelated variables.
+[App-cherry_picker](https://mammykins.shinyapps.io/App-cherry_picker/) allows the user to investigate correlations between two made-up variables (we call them apples and pears, more interesting names than X1 and X2) drawn from a uniform distribution. 
+It demonstrates how [cherry picking](https://en.wikipedia.org/wiki/Cherry_picking), or finding data that supports your viewpoint (and ignoring data that does not) can be easily done even with two totally uncorrelated variables. We also use this appletunity for fruit related puns or [punnet](https://en.wikipedia.org/wiki/Punnet)-try.
 
 ## Getting Started
 
@@ -37,4 +37,8 @@ Clone this repo and then open either the global.R, server.R or ui.R file, in the
 ## Pretty data tables
 
 [DT](https://rstudio.github.io/DT/) package provides a R / Javascript interface to make pretty tables that people expect in an app / dashboard.
+
+## Pun suggestions and improvements
+
+Raise an issue please.
 

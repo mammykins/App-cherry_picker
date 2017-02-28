@@ -51,7 +51,7 @@ server <- function(input, output, session) {
       ks4_to_map() %>%  #  Notice the parentheses! ()
       select(school_name, apples, pears,
              urn) %>%
-      mutate(apples = round(apples, 2), pears = round(pears, 2), cherry_status = round(apples * pears, 2)) %>%
+      mutate(apples = round(apples, 2), pears = round(pears, 2), cherry_status = round((apples + pears) / 2, 2)) %>%
       rename(School_Name = school_name, URN = urn),
       selection =  list(mode = 'multiple', selected = 1, target = 'row')  #  preselection, ?datatable
     ) %>%
@@ -178,7 +178,7 @@ server <- function(input, output, session) {
                  color = "black",
                  opacity = 0.8,
                  weight = 0.5,
-                 radius = 100,  #  Radius could be assigned to a another variable
+                 radius = 200,  #  Radius could be assigned to a another variable
                  fillOpacity = 0.5,
                  fillColor = pal11(ks4_sp_ll()@data$apples),
                  popup = NULL, group = "Apples") %>%
@@ -191,7 +191,7 @@ server <- function(input, output, session) {
       addCircles(lng = ks4_sp_ll()@coords[, "longitude"],
                  lat = ks4_sp_ll()@coords[, "latitude"],
                  color = "black",
-                 opacity = 1, radius = 100, weight = 1,
+                 opacity = 1, radius = 200, weight = 1,
                  fillOpacity = 0.3,
                  fillColor = pal12(ks4_sp_ll()@data$pears),
                  popup = NULL, group = "Pears") %>%
@@ -205,8 +205,8 @@ server <- function(input, output, session) {
                  lat = ks4_sp_ll()@coords[, "latitude"],
                  color = pal12(ks4_sp_ll()@data$pears),
                  opacity = 1,
-                 radius = 100,
-                 weight = 3,
+                 radius = 201,
+                 weight = 5,
                  fillOpacity = 0,
                  fillColor = pal12(ks4_sp_ll()@data$pears),
                  popup = NULL, group = "Pear outline") %>%
@@ -224,7 +224,7 @@ server <- function(input, output, session) {
       ### LA
       addPolygons(data = polygon_la(), 
                   stroke = TRUE, fillOpacity = 0, smoothFactor = 0.2, 
-                  color = "black", weight = 3,
+                  color = "black", weight = 5,
                   group = "LA boundary") %>%
       ### Groups
       hideGroup("Fruit Markers") %>%
