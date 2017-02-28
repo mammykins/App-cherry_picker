@@ -19,7 +19,7 @@ The development is described in this [blog post](https://www.machinegurning.com/
 ### Prerequisites
 
 If you want to download the code and run the app locally to understand how it works (or use for your own mapping app), 
-you'll need R Studio and several packages installed (see the head of the global.R file). You'll also need the school data and map polygon data for the LAs provided in this repo. 
+you'll need R Studio and several packages installed (see the head of the global.R file). You'll also need the school data and [map polygon data](https://data.gov.uk/) for the LAs provided in this repo. 
 Clone this repo and then open either the global.R, server.R or ui.R file, in the top right corner you'll see a "Run app" button; click this to run the app.
 
 ## Shiny
