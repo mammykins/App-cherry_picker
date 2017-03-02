@@ -85,8 +85,11 @@ tabPanel("Fruit limit",
 tabPanel("Data and methods",
          h3("Data origin"),
          p("This app combines data from various sources,
-we join data from three seperate csv files using School URN.  
-           Inspect the App data folder for  the .csv files",
+we join data from three seperate csv files using School URN.
+Inspect the App data folder for  the .csv files. 
+The LA polygon data can be found on the ",
+           a(href = "https://www.ordnancesurvey.co.uk/business-and-government/products/boundary-line.html", "Ordnance Survey"), 
+           " website or in the App repository.",
            style = "font-family: 'times'; font-si16pt"), 
          br(),
          h4("Mapping"),

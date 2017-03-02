@@ -99,7 +99,8 @@ server <- function(input, output, session) {
   
   output$scatter_fruit <- renderPlot({
     ggplot(fruits, aes(x = apples, y = pears, col = "red")) +
-      geom_bin2d() +
+      # geom_bin2d() +
+      geom_point(alpha = 0.2) +
       xlim(0, 1) + ylim(0, 1) +
       geom_point(data = slice(ks4_to_map(),
                               input$fruit_table_data_rows_selected), #  Add our selected schools from the previous tab's table
@@ -109,7 +110,7 @@ server <- function(input, output, session) {
       annotate( "rect", xmin = 0.8 , xmax = 1.0, ymin = 0.8, ymax = 1.0,
                 alpha = 0.01, colour = "pink") +  #  Capture data points that are ripe for picking!
       annotate("text", x = 0.9, y = 0.9,
-               label = "Cherry picking region", col = "white") +
+               label = "Cherry picking region", col = "black") +
       ggthemes::theme_tufte()
 
   })
@@ -126,9 +127,10 @@ server <- function(input, output, session) {
           input$fruit_table_data_rows_selected) %>%  
       mutate(made_up_statistic = (apples + pears) * (if_else(input$phase == "Secondary",
                                               3,  #  Secondary school children need more fruit!?
-                                              1) * 30)
+                                              1) * 30),
+             cherry_status = round((apples + pears) / 2, 2)
     ) %>%  #  we refine the datatable here and prettify
-      select(School_Name, made_up_statistic)
+      select(School_Name, cherry_status, made_up_statistic)
   ) %>%  #  and prettify
     formatRound(c("School_Name", "made_up_statistic"),
                 0)
